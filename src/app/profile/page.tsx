@@ -2,6 +2,7 @@
 
 import { useEffect, useState, ChangeEvent, FormEvent } from "react";
 import ProtectedRoute from "../components/ProtectedRoute";
+import { useUser } from "../context/UserContext";
 
 export default function ProfilePage() {
   return (
@@ -11,21 +12,24 @@ export default function ProfilePage() {
   );
 }
 
-
-
-
 interface ApiState {
   stateid: number | string;
   statename: string;
 }
 
 interface UserProfile {
-  userid?: string;
   referby: string;
+  userid: string;
   full_name: string;
-  mobileno: string;
   emailid: string;
+  mobileno: string;
   dob: string;
+  city_name: string;
+  stateid: string;
+  statename: string;
+  pincode: string;
+  upload_cv: string;
+  profilepic: string;
   aadharnumber: string;
   applicant_address: string;
   highest_qualification: string;
@@ -34,24 +38,25 @@ interface UserProfile {
   relative_working: string;
   relative_name: string;
   relative_number: string;
-  city_name: string;
-  stateid: string;
-  pincode: string;
   fileimg?: string;
   file?: string;
 }
 
-
-
- function ProfilePageContent() {
-
-  const [user, setUser] = useState<UserProfile>({
-    userid: "1",
-    referby: "INT",
+function ProfilePageContent() {
+  // ✅ Form default empty values
+  const [formData, setFormData] = useState<UserProfile>({
+    userid: "",
+    referby: "",
     full_name: "",
-    mobileno: "",
     emailid: "",
+    mobileno: "",
     dob: "",
+    city_name: "",
+    stateid: "",
+    statename: "",
+    pincode: "",
+    upload_cv: "",
+    profilepic: "",
     aadharnumber: "",
     applicant_address: "",
     highest_qualification: "",
@@ -60,156 +65,39 @@ interface UserProfile {
     relative_working: "",
     relative_name: "",
     relative_number: "",
-    city_name: "",
-    stateid: "",
-    pincode: "",
+    fileimg: "",
+    file: "",
   });
+
   const [states, setStates] = useState<{ id: string; name: string }[]>([]);
-
-  useEffect(() => {
-    async function fetchStates() {
-      try {
-        const res = await fetch("https://njportal.thenoncoders.in/api/v1/get_statelist", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "x-api-key": process.env.NEXT_PUBLIC_API_INTERNAL_KEY || "",
-          },
-        });
-
-        const data = await res.json();
-
-        if (data?.status && Array.isArray(data.data)) {
-          // ✅ Map API data to match your select dropdown
-          const formatted = data.data.map((s: ApiState) => ({
-            id: String(s.stateid),
-            name: s.statename,
-          }));
-
-          setStates(formatted);
-        } else {
-          console.warn("Unexpected state list response", data);
-        }
-      } catch (err) {
-        console.error("Error fetching states:", err);
-      }
-    }
-
-    fetchStates();
-  }, []);
-
-  useEffect(() => {
-    if (typeof window !== "undefined" && window.localStorage) {
-      const storedData = localStorage.getItem("user_info");
-
-      if (storedData) {
-        try {
-          const userInfo = JSON.parse(storedData);
-          const baseUrl = "https://njportal.thenoncoders.in/"; 
-
-          setUser((prev) => ({
-            ...prev,
-            full_name: userInfo.name || prev.full_name,
-            mobileno: userInfo.mobile_no || prev.mobileno,
-            emailid: userInfo.email || prev.emailid,
-            userid: userInfo.user_id || prev.userid,
-            dob: userInfo.dob || prev.dob,
-            aadharnumber: userInfo.aadharnumber || prev.aadharnumber,
-            applicant_address: userInfo.applicant_address || prev.applicant_address,
-            highest_qualification: userInfo.highest_qualification || prev.highest_qualification,
-            professional_qualification: userInfo.professional_qualification || prev.professional_qualification,
-            teaching_exp: userInfo.teaching_exp || prev.teaching_exp,
-            relative_working: userInfo.relative_working || prev.relative_working,
-            relative_name: userInfo.relative_name || prev.relative_name,
-            relative_number: userInfo.relative_number || prev.relative_number,
-            city_name: userInfo.city_name || prev.city_name,
-            stateid: userInfo.stateid || prev.stateid,
-            pincode: userInfo.pincode || prev.pincode,
-
-            // ✅ fix for image and file URLs
-            fileimg: userInfo.fileimg
-              ? userInfo.fileimg.startsWith("http")
-                ? userInfo.fileimg
-                : baseUrl + userInfo.fileimg
-              : "",
-            file: userInfo.file
-              ? userInfo.file.startsWith("http")
-                ? userInfo.file
-                : baseUrl + userInfo.file
-              : "",
-          }));
-        } catch (err) {
-          console.error("Error parsing localStorage user_info:", err);
-        }
-      }
-    }
-  }, []);
-
-
-  // Local Storage se data load karne ke liye
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const storedData = localStorage.getItem("user_info");
-    if (!storedData) return;
-
-    try {
-      const userInfo = JSON.parse(storedData);
-      const baseUrl = "https://njportal.thenoncoders.in/";
-
-      setUser((prev) => ({
-        ...prev,
-        userid: userInfo.user_id || prev.userid,
-        referby: userInfo.referby || prev.referby,
-        full_name: userInfo.name || prev.full_name,
-        mobileno: userInfo.mobile_no || prev.mobileno,
-        emailid: userInfo.email || prev.emailid,
-        dob: userInfo.dob || prev.dob,
-        aadharnumber: userInfo.aadharnumber || prev.aadharnumber,
-        applicant_address: userInfo.applicant_address || prev.applicant_address,
-        highest_qualification: userInfo.highest_qualification || prev.highest_qualification,
-        professional_qualification: userInfo.professional_qualification || prev.professional_qualification,
-        teaching_exp: userInfo.teaching_exp || prev.teaching_exp,
-        relative_working: userInfo.relative_working || prev.relative_working,
-        relative_name: userInfo.relative_name || prev.relative_name,
-        relative_number: userInfo.relative_number || prev.relative_number,
-        city_name: userInfo.city_name || prev.city_name,
-        stateid: userInfo.stateid || prev.stateid,
-        pincode: userInfo.pincode || prev.pincode,
-
-        // ✅ Ensure correct URLs
-        fileimg: userInfo.fileimg
-          ? userInfo.fileimg.startsWith("http")
-            ? userInfo.fileimg
-            : baseUrl + userInfo.fileimg
-          : prev.fileimg,
-        file: userInfo.file
-          ? userInfo.file.startsWith("http")
-            ? userInfo.file
-            : baseUrl + userInfo.file
-          : prev.file,
-      }));
-    } catch (err) {
-      console.error("Error parsing localStorage user_info:", err);
-    }
-  }, []);
-
-  const [isEditing, setIsEditing] = useState<boolean>(true);
-  const [loading, setLoading] = useState<boolean>(false);
-
-  // files & previews
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [cvFile, setCvFile] = useState<File | null>(null);
 
-  // Optional: fetch profile to prefill (uncomment or keep)
-  useEffect(() => {
-    if (!user.userid || user.userid === "1") return;
+  const [isEditing, setIsEditing] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-    async function fetchProfile() {
+  // const [storedUserId, setStoredUserId] = useState<string | null>(null);
+  const [storedUserId, setStoredUserId] = useState<string | null>(null);
+
+  // ⭐ Load Local Storage UserID
+  const { user } = useUser();
+  useEffect(() => {
+
+    if (user?.userid) {
+      setStoredUserId(String(user.userid));
+    }
+    if (user) {
+      setStoredUserId(String(user.userid || user.user_id || ""));
+    }
+  }, []);
+
+  // ⭐ Fetch States
+  useEffect(() => {
+    async function fetchStates() {
       try {
         const res = await fetch(
-          `https://njportal.thenoncoders.in/api/v1/get_myprofile?userid=${encodeURIComponent(user.userid)}`,
+          "https://njportal.thenoncoders.in/api/v1/get_statelist",
           {
             method: "GET",
             headers: {
@@ -219,53 +107,87 @@ interface UserProfile {
           }
         );
 
-        if (!res.ok) return;
-        const payload = await res.json();
-        const data = payload?.data ?? payload;
+        const data = await res.json();
 
-        const allowed: (keyof UserProfile)[] = [
-          "referby",
-          "full_name",
-          "mobileno",
-          "emailid",
-          "dob",
-          "aadharnumber",
-          "applicant_address",
-          "highest_qualification",
-          "professional_qualification",
-          "teaching_exp",
-          "relative_working",
-          "relative_name",
-          "relative_number",
-          "city_name",
-          "stateid",
-          "pincode",
-          "fileimg",
-          "file",
-        ];
-
-        const patched: Partial<UserProfile> = {};
-        allowed.forEach((k) => {
-          if (data?.[k] !== undefined && data?.[k] !== null) patched[k] = String(data[k]);
-        });
-
-        const baseUrl = "https://njportal.thenoncoders.in/";
-        if (patched.fileimg && !patched.fileimg.startsWith("http"))
-          patched.fileimg = baseUrl + patched.fileimg;
-        if (patched.file && !patched.file.startsWith("http")) patched.file = baseUrl + patched.file;
-
-        // ✅ Update both state + localStorage
-        setUser((prev) => ({ ...prev, ...patched }));
-        const updatedUser = { ...user, ...patched };
-        localStorage.setItem("user_info", JSON.stringify(updatedUser));
+        if (data.status && Array.isArray(data.data)) {
+          const formatted = data.data.map((s: ApiState) => ({
+            id: String(s.stateid),
+            name: s.statename,
+          }));
+          setStates(formatted);
+        }
       } catch (err) {
-        console.error("get_myprofile error:", err);
+        console.error(err);
+      }
+    }
+
+    fetchStates();
+  }, []);
+
+  // ⭐ Fetch Profile
+  useEffect(() => {
+    if (!storedUserId) return;
+
+    async function fetchProfile() {
+      try {
+        const res = await fetch(
+          `https://njportal.thenoncoders.in/api/v1/get_myprofile?userid=${storedUserId}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              "x-api-key": process.env.NEXT_PUBLIC_API_INTERNAL_KEY || "",
+            },
+          }
+        );
+
+        const json = await res.json();
+        console.log("API Response:", json.data[0]);
+        console.log("🔥 Profile Response:", json);
+
+        if (json.status && json.data.length > 0) {
+          const p = json.data[0];
+
+          // ⭐ Map ALL FIELDS CORRECTLY
+          setFormData({
+            userid: String(p.userid) ?? "",
+            referby: p.referby ?? "",
+            full_name: p.full_name ?? "",
+            emailid: p.emailid ?? "",
+            mobileno: p.mobileno ?? "",
+            dob: p.dob ? p.dob.split("T")[0] : "",
+            city_name: p.city_name ?? "",
+            stateid: String(p.stateid) ?? "",
+            statename: p.statename ?? "",
+            pincode: p.pincode ?? "",
+            upload_cv: p.upload_cv ?? "",
+            profilepic: p.profilepic ?? "",
+            aadharnumber: p.aadharnumber ?? "",
+            applicant_address: p.applicant_address ?? "",
+            highest_qualification: p.highest_qualification ?? "",
+            professional_qualification: p.professional_qualification ?? "",
+            teaching_exp: p.teaching_exp ?? "",
+            relative_working: p.relative_working ?? "",
+            relative_name: p.relative_name ?? "",
+            relative_number: p.relative_number ?? "",
+            fileimg: p.profilepic,
+            file: p.upload_cv,
+          });
+
+          if (p.profilepic) setPhotoPreview(p.profilepic);
+        }
+      } catch (err) {
+        console.error("❌ Fetch Profile Error:", err);
       }
     }
 
     fetchProfile();
-  }, [user.userid]);
-   // ✅ Cleanup preview URLs
+  }, [storedUserId]);
+
+
+  console.log("🔥 Get Profile:", formData);
+
+  // ✅ Cleanup preview URLs
   useEffect(() => {
     return () => {
       if (photoPreview) URL.revokeObjectURL(photoPreview);
@@ -274,7 +196,7 @@ interface UserProfile {
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setUser((p) => ({ ...p, [name]: value }));
+    setFormData((p) => ({ ...p, [name]: value }));
   };
 
   const handlePhoto = (e: ChangeEvent<HTMLInputElement>) => {
@@ -314,16 +236,23 @@ interface UserProfile {
       "referby",
     ];
 
-    for (const k of required) {
-      if (!String(((user as unknown) as Record<string, unknown>)[k] ?? "").trim())
-        return `${k.replace(/_/g, " ")} is required`;
+    // for (const k of required) {
+    //   if (!String(((user as unknown) as Record<string, unknown>)[k] ?? "").trim())
+    //     return `${k.replace(/_/g, " ")} is required`;
+    // }
+
+    // Profile photo required only on first time
+    if (!formData.fileimg && !photoFile) {
+      return "Please select a profile photo";
     }
 
-    if (!photoFile && !user.fileimg) return "Please select profile photo";
-    if (!cvFile && !user.file) return "Please select CV file";
+    // CV required only on first time
+    if (!formData.file && !cvFile) {
+      return "Please upload your CV";
+    }
 
-    if (!/^\d{10}$/.test(user.mobileno)) return "Mobile must be 10 digits";
-    if (!/^\S+@\S+\.\S+$/.test(user.emailid)) return "Enter a valid email";
+    if (!/^\d{10}$/.test(formData.mobileno)) return "Mobile must be 10 digits";
+    if (!/^\S+@\S+\.\S+$/.test(formData.emailid)) return "Enter a valid email";
 
     return null;
   };
@@ -340,13 +269,33 @@ interface UserProfile {
     try {
       const fd = new FormData();
 
-      // append fields
-      Object.entries(user).forEach(([k, v]) => {
-        if (v !== undefined && v !== null) fd.append(k, String(v));
-      });
+      fd.append("userid", formData.userid);
+      fd.append("referby", formData.referby);
+      fd.append("full_name", formData.full_name);
+      fd.append("emailid", formData.emailid);
+      fd.append("mobileno", formData.mobileno);
+      fd.append("dob", formData.dob);
+      fd.append("city_name", formData.city_name);
+      fd.append("stateid", formData.stateid);
+      fd.append("pincode", formData.pincode);
+      fd.append("aadharnumber", formData.aadharnumber);
+      fd.append("applicant_address", formData.applicant_address);
+      fd.append("highest_qualification", formData.highest_qualification);
+      fd.append("professional_qualification", formData.professional_qualification);
+      fd.append("teaching_exp", formData.teaching_exp);
+      fd.append("relative_working", formData.relative_working);
+      fd.append("relative_name", formData.relative_name);
+      fd.append("relative_number", formData.relative_number);
 
-      if (photoFile) fd.append("fileimg", photoFile);
-      if (cvFile) fd.append("file", cvFile);
+      // files
+      if (photoFile) {
+        fd.append("fileimg", photoFile);   // correct backend name
+      }
+
+      if (cvFile) {
+        fd.append("file", cvFile);         // correct backend name
+      }
+
 
       const res = await fetch("https://njportal.thenoncoders.in/api/v1/update_profile", {
         method: "POST",
@@ -356,6 +305,7 @@ interface UserProfile {
         },
         body: fd,
       });
+
 
       if (res.status === 401) {
         alert("Unauthorized (401). Check your x-api-key.");
@@ -371,33 +321,72 @@ interface UserProfile {
         return;
       }
 
-      alert("Profile updated successfully!");
-      if (payload?.data) setUser((p) => ({ ...p, ...payload.data }));
+      if (payload?.status === true) {
+        alert("Profile updated successfully!");
+      } else {
+        alert("Failed: " + (payload?.message || "Unknown error"));
+      }
+      async function refreshProfile() {
+        const res = await fetch(
+          `https://njportal.thenoncoders.in/api/v1/get_myprofile?userid=${storedUserId}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              "x-api-key": process.env.NEXT_PUBLIC_API_INTERNAL_KEY || "",
+            },
+          }
+        );
 
-      // ✅ ADD THIS BLOCK — save updated info to localStorage
-      const updatedUserInfo = {
-        user_id: user.userid,
-        name: user.full_name,
-        mobile_no: user.mobileno,
-        email: user.emailid,
-        dob: user.dob,
-        aadharnumber: user.aadharnumber,
-        applicant_address: user.applicant_address,
-        highest_qualification: user.highest_qualification,
-        professional_qualification: user.professional_qualification,
-        teaching_exp: user.teaching_exp,
-        relative_working: user.relative_working,
-        relative_name: user.relative_name,
-        relative_number: user.relative_number,
-        city_name: user.city_name,
-        stateid: user.stateid,
-        pincode: user.pincode,
-        fileimg: user.fileimg,
-        file: user.file,
-      };
+        const json = await res.json();
+        if (json.status && Array.isArray(json.data) && json.data.length > 0) {
+          const newProfile = json.data[0];
 
-      localStorage.setItem("user_info", JSON.stringify(updatedUserInfo));
-      // ✅ END BLOCK
+          // ⭐ ONLY ONE setFormData (correct mapping)
+          setFormData({
+            userid: String(newProfile.userid) ?? "",
+            referby: newProfile.referby ?? "",
+            full_name: newProfile.full_name ?? "",
+            emailid: newProfile.emailid ?? "",
+            mobileno: newProfile.mobileno ?? "",
+            dob: newProfile.dob ? newProfile.dob.split("T")[0] : "",
+            city_name: newProfile.city_name ?? "",
+            stateid: String(newProfile.stateid) ?? "",
+            statename: newProfile.statename ?? "",
+            pincode: newProfile.pincode ?? "",
+            upload_cv: newProfile.upload_cv ?? "",
+            profilepic: newProfile.profilepic ?? "",
+            aadharnumber: newProfile.aadharnumber ?? "",
+            applicant_address: newProfile.applicant_address ?? "",
+            highest_qualification: newProfile.highest_qualification ?? "",
+            professional_qualification: newProfile.professional_qualification ?? "",
+            teaching_exp: newProfile.teaching_exp ?? "",
+            relative_working: newProfile.relative_working ?? "",
+            relative_name: newProfile.relative_name ?? "",
+            relative_number: newProfile.relative_number ?? "",
+            fileimg: newProfile.profilepic,
+            file: newProfile.upload_cv,
+          });
+
+          // photo preview update
+          if (newProfile.profilepic) {
+            setPhotoPreview(newProfile.profilepic);        
+          }
+
+          // save to local
+          localStorage.setItem("user_profile", JSON.stringify(newProfile));
+        }
+      }
+
+      await refreshProfile();
+
+      // Stop editing mode
+
+
+      // ProfilePageContent();
+
+      console.log("Sending:", formData);
+
 
       setIsEditing(false);
     } catch (err) {
@@ -406,17 +395,20 @@ interface UserProfile {
     } finally {
       setLoading(false);
     }
+
   };
+
+
 
   // UI helpers
   const inputBase =
     "w-full px-4 py-2 rounded-lg shadow-sm border focus:outline-none focus:ring-2 focus:ring-indigo-400";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-indigo-50 to-blue-50 py-12 px-4">
+    <div className="min-h-screen mt-13 bg-gradient-to-br from-purple-50 via-indigo-50 to-blue-50 py-12 px-4">
       <form
         onSubmit={handleSubmit}
-        className="max-w-5xl mx-auto bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden"
+        className="max-w-5xl mx-auto bg-white/95 backdrop-blur-sm rounded-3xl  overflow-hidden"
       >
         {/* header */}
         <div className="p-6 md:p-8 flex items-center justify-between border-b">
@@ -433,7 +425,7 @@ interface UserProfile {
                   // reset previews if cancel editing
                   setPhotoFile(null);
                   setCvFile(null);
-                  setPhotoPreview(user.fileimg ?? null);
+                  setPhotoPreview(formData.fileimg ?? null);
                 }
                 setIsEditing((s) => !s);
               }}
@@ -462,9 +454,9 @@ interface UserProfile {
               {photoPreview ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={photoPreview} alt="preview" className="w-full h-full object-cover" />
-              ) : user.fileimg ? (
+              ) : formData.fileimg ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={user.fileimg} alt="avatar" className="w-full h-full object-cover" />
+                <img src={formData.fileimg} alt="avatar" className="w-full h-full object-cover" />
               ) : (
                 <div className="text-center px-3">
                   <div className="text-sm font-medium text-indigo-700">No Photo</div>
@@ -480,7 +472,7 @@ interface UserProfile {
                 accept="image/*"
                 onChange={handlePhoto}
                 disabled={!isEditing}
-                required={!user.fileimg && !photoFile}
+                required={!formData.fileimg && !photoFile}
                 className="w-full text-sm text-gray-600"
               />
             </label>
@@ -494,12 +486,12 @@ interface UserProfile {
                     accept=".pdf,.doc,.docx"
                     onChange={handleCv}
                     disabled={!isEditing}
-                    required={!user.file && !cvFile}
+                    required={!formData.file && !cvFile}
                     className="w-full text-sm text-gray-600"
                   />
                 </label>
                 <div className="text-xs text-gray-500">
-                  {cvFile ? cvFile.name : user.file ? extractFilename(user.file) : "No file"}
+                  {cvFile ? cvFile.name : formData.file ? extractFilename(formData.file) : "No file"}
                 </div>
               </div>
             </div>
@@ -512,7 +504,7 @@ interface UserProfile {
                 <label className="block text-sm font-medium text-gray-700">Refer By *</label>
                 <input
                   name="referby"
-                  value={user.referby}
+                  value={formData.referby}
                   onChange={handleChange}
                   readOnly={!isEditing}
                   required
@@ -524,7 +516,7 @@ interface UserProfile {
                 <label className="block text-sm font-medium text-gray-700">Full Name *</label>
                 <input
                   name="full_name"
-                  value={user.full_name}
+                  value={formData.full_name}
                   onChange={handleChange}
                   readOnly={!isEditing}
                   required
@@ -536,7 +528,7 @@ interface UserProfile {
                 <label className="block text-sm font-medium text-gray-700">Mobile Number *</label>
                 <input
                   name="mobileno"
-                  value={user.mobileno}
+                  value={formData.mobileno}
                   onChange={handleChange}
                   readOnly={!isEditing}
                   required
@@ -549,7 +541,7 @@ interface UserProfile {
                 <label className="block text-sm font-medium text-gray-700">Email ID *</label>
                 <input
                   name="emailid"
-                  value={user.emailid}
+                  value={formData.emailid}
                   onChange={handleChange}
                   readOnly={!isEditing}
                   required
@@ -562,7 +554,7 @@ interface UserProfile {
                 <label className="block text-sm font-medium text-gray-700">Date of Birth *</label>
                 <input
                   name="dob"
-                  value={user.dob}
+                  value={formData.dob}
                   onChange={handleChange}
                   readOnly={!isEditing}
                   required
@@ -575,7 +567,7 @@ interface UserProfile {
                 <label className="block text-sm font-medium text-gray-700">Aadhar Number *</label>
                 <input
                   name="aadharnumber"
-                  value={user.aadharnumber}
+                  value={formData.aadharnumber}
                   onChange={handleChange}
                   readOnly={!isEditing}
                   required
@@ -587,7 +579,7 @@ interface UserProfile {
                 <label className="block text-sm font-medium text-gray-700">Address *</label>
                 <textarea
                   name="applicant_address"
-                  value={user.applicant_address}
+                  value={formData.applicant_address}
                   onChange={handleChange}
                   readOnly={!isEditing}
                   required
@@ -600,7 +592,7 @@ interface UserProfile {
                 <label className="block text-sm font-medium text-gray-700">Highest Qualification *</label>
                 <input
                   name="highest_qualification"
-                  value={user.highest_qualification}
+                  value={formData.highest_qualification}
                   onChange={handleChange}
                   readOnly={!isEditing}
                   required
@@ -612,7 +604,7 @@ interface UserProfile {
                 <label className="block text-sm font-medium text-gray-700">Professional Qualification *</label>
                 <input
                   name="professional_qualification"
-                  value={user.professional_qualification}
+                  value={formData.professional_qualification}
                   onChange={handleChange}
                   readOnly={!isEditing}
                   required
@@ -624,7 +616,7 @@ interface UserProfile {
                 <label className="block text-sm font-medium text-gray-700">Teaching Experience *</label>
                 <input
                   name="teaching_exp"
-                  value={user.teaching_exp}
+                  value={formData.teaching_exp}
                   onChange={handleChange}
                   readOnly={!isEditing}
                   required
@@ -636,7 +628,7 @@ interface UserProfile {
                 <label className="block text-sm font-medium text-gray-700">City *</label>
                 <input
                   name="city_name"
-                  value={user.city_name}
+                  value={formData.city_name}
                   onChange={handleChange}
                   readOnly={!isEditing}
                   required
@@ -647,7 +639,7 @@ interface UserProfile {
                 <label className="block text-sm font-medium text-gray-700">State *</label>
                 <select
                   name="stateid"
-                  value={user.stateid}
+                  value={formData.stateid}
                   onChange={handleChange}
                   disabled={!isEditing}
                   required
@@ -670,7 +662,7 @@ interface UserProfile {
                 <label className="block text-sm font-medium text-gray-700">Pincode *</label>
                 <input
                   name="pincode"
-                  value={user.pincode}
+                  value={formData.pincode}
                   onChange={handleChange}
                   readOnly={!isEditing}
                   required
@@ -684,7 +676,7 @@ interface UserProfile {
                   <label className="block text-sm font-medium text-gray-700">Relative Working *</label>
                   <input
                     name="relative_working"
-                    value={user.relative_working}
+                    value={formData.relative_working}
                     onChange={handleChange}
                     readOnly={!isEditing}
                     required
@@ -696,7 +688,7 @@ interface UserProfile {
                   <label className="block text-sm font-medium text-gray-700">Relative Name *</label>
                   <input
                     name="relative_name"
-                    value={user.relative_name}
+                    value={formData.relative_name}
                     onChange={handleChange}
                     readOnly={!isEditing}
                     required
@@ -708,7 +700,7 @@ interface UserProfile {
                   <label className="block text-sm font-medium text-gray-700">Relative Number *</label>
                   <input
                     name="relative_number"
-                    value={user.relative_number}
+                    value={formData.relative_number}
                     onChange={handleChange}
                     readOnly={!isEditing}
                     required

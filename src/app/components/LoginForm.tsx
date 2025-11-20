@@ -102,6 +102,7 @@ export default function LoginForm() {
         // ✅ Step 2: ALSO save user_info (for Profile page compatibility)
         const userInfo = {
           user_id: res.login_data.userid,
+          userid: res.login_data.userid,
           name: res.login_data.username,
           mobile_no: res.login_data.user_mobileno,
           email: res.login_data.user_emailid,
