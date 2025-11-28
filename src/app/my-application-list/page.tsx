@@ -93,7 +93,7 @@ export default function MyApplications() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 pt-20">
+    <div className="max-w-6xl mx-auto px-4 py-8 pt-20 min-h-screen">
       <h1 className="text-2xl font-bold text-gray-800 mb-6">My Applications</h1>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">

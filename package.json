@@ -2,10 +2,11 @@
   "name": "exam",
   "version": "0.1.0",
   "private": true,
-  "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
-    "start": "next start",
+   "scripts": {
+   "dev": "next dev",
+    "build": "next build",
+     "start": "NODE_ENV=production node server.js",
+     "export": "next export",
     "lint": "eslint"
   },
   "dependencies": {

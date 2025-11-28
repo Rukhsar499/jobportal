@@ -228,10 +228,17 @@ export default function JobOpenings() {
           alert("Payment initiation failed.");
         }
       }
-    } catch (error) {
+      else {
+  // ❌ Show message when already applied
+  alert(result.message || "Application already submitted!");
+  setIsOpen(false); // modal band bhi kar sakte ho
+}
+    }
+     catch (error) {
       console.error("Error submitting application:", error);
       alert("Something went wrong! Please try again.");
     }
+    
   };
 
 
