@@ -33,6 +33,7 @@ interface FormDataType {
 }
 
 export default function JobOpenings() {
+  
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
@@ -55,6 +56,8 @@ export default function JobOpenings() {
     cv: null,
   });
   const [savedUser, setSavedUser] = useState<{ userid: number; username: string; user_emailid: string; user_mobileno: string } | null>(null);
+
+  
 
   // ✅ Load saved user from localStorage
   useEffect(() => {
@@ -88,6 +91,41 @@ export default function JobOpenings() {
     };
     fetchJobs();
   }, []);
+  
+  useEffect(() => {
+  const fetchProfileData = async () => {
+    if (!savedUser?.userid) return;
+
+    try {
+      const res = await fetch(`https://njportal.thenoncoders.in/api/v1/get_profile/${savedUser.userid}`, {
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": process.env.NEXT_PUBLIC_API_INTERNAL_KEY || "",
+        },
+      });
+
+      const data = await res.json();
+      if (data.status) {
+        const profile = data.data;
+
+        setFormData((prev) => ({
+          ...prev,
+          address: profile.address || "",
+          highestQualification: profile.highest_qualification || "",
+          professionalQualification: profile.professional_qualification || "",
+          teaching_exp: profile.teaching_exp || "",
+          relative_working: profile.relative_working || "",
+          relative_name: profile.relative_name || "",
+          relative_number: profile.relative_number || "",
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+    }
+  };
+
+  fetchProfileData();
+}, [savedUser]);
 
 
   const handleOpenForm = (jobTitle: string) => {
@@ -120,6 +158,8 @@ export default function JobOpenings() {
       setCurrentStep(2);
       return;
     }
+
+    
 
     // Step 2 → Step 3 (only if Aadhaar valid)
     if (currentStep === 2) {
