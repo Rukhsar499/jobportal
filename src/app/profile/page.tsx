@@ -518,6 +518,17 @@ function ProfilePageContent() {
                     />
                   </label>
 
+                  <label className="block">
+                    City *
+                    <input
+                      name="city_name"
+                      value={formData.city_name}
+                      onChange={handleChange}
+                      readOnly={!isEditing}
+                      className="w-full px-3 py-2 border rounded"
+                    />
+                  </label>
+
                   <label className="block md:col-span-2">
                     Address *
                     <textarea
@@ -571,16 +582,7 @@ function ProfilePageContent() {
                     </select>
                   </label>
 
-                  <label className="block">
-                    City *
-                    <input
-                      name="city_name"
-                      value={formData.city_name}
-                      onChange={handleChange}
-                      readOnly={!isEditing}
-                      className="w-full px-3 py-2 border rounded"
-                    />
-                  </label>
+                  
 
                   <label className="block">
                     State *

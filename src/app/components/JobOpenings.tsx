@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
+import { extractFilename } from "../profile/page";
+
 
 interface Job {
   job_id: number;
@@ -22,20 +25,34 @@ interface FormDataType {
 
   aadhar: string;
   address: string;
-  highestQualification: string;
-  professionalQualification: string;
+  highest_qualification: string;
+  professional_qualification: string;
   teaching_exp: string;
   relative_working: string;
   relative_name: string;
   relative_number: string;
-  photo: File | null;
-  cv: File | null;
+  fileimg: string;
+  file: string;
 }
 
 export default function JobOpenings() {
-  
+
+  const BASE_URL = "https://njportal.thenoncoders.in/";
+
+  function fullURL(path: string) {
+    if (!path) return "";
+    if (path.startsWith("http")) return path;
+    return BASE_URL + path;
+  }
+
+  function extractFilename(url?: string) {
+    if (!url) return "";
+    return url.split("/").pop() || url;
+  }
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [cvFile, setCvFile] = useState<File | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [errorMessage, setErrorMessage] = useState("");
   const [formData, setFormData] = useState<FormDataType>({
@@ -46,18 +63,18 @@ export default function JobOpenings() {
     jobTitle: "",
     aadhar: "",
     address: "",
-    highestQualification: "",
-    professionalQualification: "",
+    highest_qualification: "",
+    professional_qualification: "",
     teaching_exp: "",
     relative_working: "",
     relative_name: "",
-   relative_number: "",
-    photo: null,
-    cv: null,
+    relative_number: "",
+    fileimg: "",
+    file: "",
   });
   const [savedUser, setSavedUser] = useState<{ userid: number; username: string; user_emailid: string; user_mobileno: string } | null>(null);
 
-  
+
 
   // ✅ Load saved user from localStorage
   useEffect(() => {
@@ -91,41 +108,38 @@ export default function JobOpenings() {
     };
     fetchJobs();
   }, []);
-  
-  useEffect(() => {
-  const fetchProfileData = async () => {
-    if (!savedUser?.userid) return;
 
+  const fillProfileData = async (userid: string) => {
     try {
-      const res = await fetch(`https://njportal.thenoncoders.in/api/v1/get_profile/${savedUser.userid}`, {
+      const res = await fetch(`https://njportal.thenoncoders.in/api/v1/get_myprofile?userid=${userid}`, {
         headers: {
           "Content-Type": "application/json",
           "x-api-key": process.env.NEXT_PUBLIC_API_INTERNAL_KEY || "",
         },
       });
 
-      const data = await res.json();
-      if (data.status) {
-        const profile = data.data;
+      const json = await res.json();
+      if (json.status && json.data.length > 0) {
+        const p = json.data[0];
 
         setFormData((prev) => ({
           ...prev,
-          address: profile.address || "",
-          highestQualification: profile.highest_qualification || "",
-          professionalQualification: profile.professional_qualification || "",
-          teaching_exp: profile.teaching_exp || "",
-          relative_working: profile.relative_working || "",
-          relative_name: profile.relative_name || "",
-          relative_number: profile.relative_number || "",
+          aadhar: p.aadharnumber || "",
+          address: p.applicant_address || "",
+          highest_qualification: p.highest_qualification || "",
+          professional_qualification: p.professional_qualification || "",
+          teaching_exp: p.teaching_exp || "",
+          relative_working: p.relative_working || "",
+          relative_name: p.relative_name || "",
+          relative_number: p.relative_number || "",
+          fileimg: p.profilepic,
+          file: p.upload_cv,
         }));
       }
-    } catch (error) {
-      console.error("Error fetching profile:", error);
+    } catch (err) {
+      console.error("Fill profile data error:", err);
     }
   };
-
-  fetchProfileData();
-}, [savedUser]);
 
 
   const handleOpenForm = (jobTitle: string) => {
@@ -144,6 +158,7 @@ export default function JobOpenings() {
     }));
 
     // ✅ Open form modal
+    fillProfileData(savedUser.userid.toString());
     setIsOpen(true);
     setCurrentStep(1);
   };
@@ -159,7 +174,7 @@ export default function JobOpenings() {
       return;
     }
 
-    
+
 
     // Step 2 → Step 3 (only if Aadhaar valid)
     if (currentStep === 2) {
@@ -195,7 +210,7 @@ export default function JobOpenings() {
   // ✅ Submit form to API
   const handleSubmit = async () => {
     try {
-      if (!formData.photo || !formData.cv) {
+      if (!formData.fileimg || !formData.file) {
         alert("Please upload both photo and CV");
         return;
       }
@@ -219,14 +234,14 @@ export default function JobOpenings() {
       data.append("emailid", formData.user_emailid);
       data.append("aadharnumber", formData.aadhar);
       data.append("applicant_address", formData.address);
-      data.append("highest_qualification", formData.highestQualification);
-      data.append("professional_qualification", formData.professionalQualification);
+      data.append("highest_qualification", formData.highest_qualification);
+      data.append("professional_qualification", formData.professional_qualification);
       data.append("teaching_exp", formData.teaching_exp);
       data.append("relative_working", formData.relative_working);
       data.append("relative_name", formData.relative_name);
       data.append("relative_number", formData.relative_number);
-      data.append("fileimg", formData.photo);
-      data.append("file", formData.cv);
+      data.append("fileimg", formData.fileimg);
+      data.append("file", formData.file);
 
       // 🟢 Step 1: Submit application
       const res = await fetch("https://njportal.thenoncoders.in/api/v1/apply_for_job", {
@@ -269,16 +284,16 @@ export default function JobOpenings() {
         }
       }
       else {
-  // ❌ Show message when already applied
-  alert(result.message || "Application already submitted!");
-  setIsOpen(false); // modal band bhi kar sakte ho
-}
+        // ❌ Show message when already applied
+        alert(result.message || "Application already submitted!");
+        setIsOpen(false); // modal band bhi kar sakte ho
+      }
     }
-     catch (error) {
+    catch (error) {
       console.error("Error submitting application:", error);
       alert("Something went wrong! Please try again.");
     }
-    
+
   };
 
 
@@ -367,6 +382,7 @@ export default function JobOpenings() {
                   placeholder="Aadhar Number"
                   value={formData.aadhar}
                   onChange={handleChange}
+                  readOnly
                   className="w-full p-2 text-sm border-b border-[#0000008a]"
                   maxLength={12}
                 />
@@ -380,40 +396,32 @@ export default function JobOpenings() {
                   placeholder="Address"
                   value={formData.address}
                   onChange={handleChange}
+                  readOnly
                   className="w-full p-2 text-sm border-b border-[#0000008a]"
                   required
                 />
 
-                <select
-                  name="highestQualification"
-                  value={formData.highestQualification}
+                <input
+                  name="highest_qualification"
+                  value={formData.highest_qualification}
                   onChange={handleChange}
+                  readOnly
                   className="w-full p-2 text-sm border-b border-[#0000008a]"
-                  required
-                >
-                  <option value="">Highest Qualification</option>
-                  <option value="High School">High School</option>
-                  <option value="Bachelor’s">Bachelor’s</option>
-                  <option value="Master’s">Master’s</option>
-                </select>
+                />
 
-                <select
-                  name="professionalQualification"
-                  value={formData.professionalQualification}
+                <input
+                  name="professional_qualification"
+                  value={formData.professional_qualification}
                   onChange={handleChange}
+                  readOnly
                   className="w-full p-2 text-sm border-b border-[#0000008a]"
-                  required
-                >
-                  <option value="">Professional Qualification</option>
-                  <option value="React">React</option>
-                  <option value="Node.js">Node.js</option>
-                  <option value="Laravel">Laravel</option>
-                </select>
+                />
 
                 <select
                   name="teaching_exp"
                   value={formData.teaching_exp}
                   onChange={handleChange}
+
                   className="w-full p-2 text-sm border-b border-[#0000008a]"
                   required
                 >
@@ -464,6 +472,7 @@ export default function JobOpenings() {
                       placeholder="Relative’s Name"
                       value={formData.relative_name}
                       onChange={handleChange}
+                      readOnly
                       className="w-1/2 p-2 text-sm border-b border-[#0000008a]"
                     />
                     <input
@@ -472,6 +481,7 @@ export default function JobOpenings() {
                       placeholder="Relative’s Phone"
                       value={formData.relative_number}
                       onChange={handleChange}
+                      readOnly
                       className="w-1/2 p-2 text-sm border-b border-[#0000008a]"
                       maxLength={10}
                     />
@@ -487,38 +497,69 @@ export default function JobOpenings() {
             {currentStep === 3 && (
               <div className="space-y-4">
                 {/* Photo Upload */}
-                <div>
-                  <label className="block mb-1">Upload Photo</label>
-                  <div className="flex items-center gap-4">
-                    <label className="bg-[#1A7EBD] text-white px-4 py-2 rounded cursor-pointer">
-                      {formData.photo ? "Change Photo" : "Choose Photo"}
-                      <input
-                        type="file"
-                        name="photo"
-                        accept="image/*"
-                        onChange={handleFileChange}
-                        className="hidden"
-                      />
-                    </label>
-                    {formData.photo && <span className="text-gray-700">{formData.photo.name}</span>}
-                  </div>
+                <div className="w-40 h-40 bg-gray-100 rounded-xl border overflow-hidden flex justify-center items-center">
+                  {/* {photoPreview || formData.fileimg ? (
+                                    <Image
+                                       src={photoPreview || fullURL(formData.fileimg) || ""}
+                                       width={300}
+                                       height={300}
+                                       alt="profile"
+                                       className="w-full h-full object-cover"
+                                     />
+                                   ) : (
+                                     <p>No Photo</p>
+                                   )} */}
+                  {photoPreview ? (
+                    // Local preview image (no fullURL)
+                    <Image
+                      src={photoPreview}
+                      width={300}
+                      height={300}
+                      alt="profile"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : formData.fileimg ? (
+                    // Server stored image
+                    <Image
+                      src={fullURL(formData.fileimg)}
+                      width={300}
+                      height={300}
+                      alt="profile"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <p>No Photo</p>
+                  )}
                 </div>
 
                 {/* CV Upload */}
-                <div>
-                  <label className="block mb-1">Upload CV</label>
-                  <div className="flex items-center gap-4">
-                    <label className="bg-[#1A7EBD] text-white px-4 py-2 rounded cursor-pointer">
-                      {formData.cv ? "Change CV" : "Choose CV"}
-                      <input
-                        type="file"
-                        name="cv"
-                        accept=".pdf,.doc,.docx"
-                        onChange={handleFileChange}
-                        className="hidden"
-                      />
-                    </label>
-                    {formData.cv && <span className="text-gray-700">{formData.cv.name}</span>}
+                <div className="w-full text-sm text-gray-700">
+                  <input
+                    type="file"
+                    accept=".pdf,.doc,.docx"
+                    className="w-full"
+                    onClick={(e) => {
+                      e.preventDefault(); // file select dialog open nahi hoga
+                      alert("To change your CV, please update it from your Profile page first.");
+                    }}
+                  />
+                  <div className="mt-1 text-xs">
+                    {cvFile ? (
+                      // Local selected file (normally shouldn't happen here)
+                      <span>{cvFile.name}</span>
+                    ) : formData.file ? (
+                      // Server stored file
+                      <a
+                        href={fullURL(formData.file)} // server file ka URL
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 underline"
+                      >
+                        View
+                      </a>
+                    ) : (
+                      <span>No file</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -538,3 +579,4 @@ export default function JobOpenings() {
     </section>
   );
 }
+export { extractFilename };
