@@ -20,8 +20,8 @@ type SocialItem = {
 
 const legalLinks: LinkItem[] = [
     { name: "Home", href: "/" },
-    { name: "About Us", href: "/about-us" },
-    { name: "Contact Us", href: "/contact" },
+    { name: "Profile", href: "/profile" },
+    // { name: "Contact Us", href: "/contact" },
 
     // { name: "Cancellation Policy", href: "/cancellation-policy" },
 
