@@ -1,18 +1,7 @@
 # DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
-PassengerAppRoot "/home/codesol1/nj.psmservices.org"
+PassengerAppRoot "/home/codesol1/narayanajobs.com"
 PassengerBaseURI "/"
-PassengerNodejs "/home/codesol1/nodevenv/nj.psmservices.org/22/bin/node"
+PassengerNodejs "/home/codesol1/nodevenv/narayanajobs.com/22/bin/node"
 PassengerAppType node
 PassengerStartupFile server.js
 # DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END
-# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
-PassengerAppRoot "/home/codesol1/nj.psmservices.org"
-PassengerBaseURI "/"
-PassengerNodejs "/home/codesol1/nodevenv/nj.psmservices.org/22/bin/node"
-PassengerAppType node
-PassengerStartupFile server.js
-# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END
-# DO NOT REMOVE OR MODIFY. CLOUDLINUX ENV VARS CONFIGURATION BEGIN
-<IfModule Litespeed>
-</IfModule>
-# DO NOT REMOVE OR MODIFY. CLOUDLINUX ENV VARS CONFIGURATION END
